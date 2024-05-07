@@ -21,15 +21,15 @@ const SingleChat = () => {
 
   // Dynamically generate roomId based on user IDs
   const generateRoomId = (userId1, userId2) => {
-    console.log(userId1)
-    console.log(userId2)
+    // console.log(userId1)
+    // console.log(userId2)
     const sortedIds = [userId1, userId2].sort();
-    console.log(sortedIds)
+    // console.log(sortedIds)
     return sortedIds.join('');
   };
 
   const roomId = generateRoomId(userData.id, selectedUserData.id);
-  console.log(roomId)
+  // console.log(roomId)
 
   useEffect(() => {
     const unsubscribe = firestore()
@@ -38,7 +38,12 @@ const SingleChat = () => {
       .collection('messages')
       .orderBy('createdAt', 'desc')
       .onSnapshot(snapshot => {
+        console.log('SingleChat')
+        console.log(snapshot.docs)
         const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        console.log('---------------')
+        console.log(data);
+        // data.map(item => console.log(item.message))
         setMessages(data);
       });
 
@@ -62,7 +67,6 @@ const SingleChat = () => {
       setMsg('');
     } catch (error) {
       console.error('Error sending message:', error);
-      // You may want to handle the error here, e.g., show an alert
     }
   };
 

@@ -13,12 +13,19 @@ const AllUser = () => {
   // console.log(userData)
 
   const [allUser, setAllUser] = useState();
+  const [search, setSearch] = useState('');
+  const [searchFilter, setSearchFilter] = useState('')
 
   const navigation = useNavigation();
 
   useEffect(() => {
     getAllUsers();
-  }, [])
+  }, []);
+
+  // useEffect(() => {
+  //   handleSearch(); // This will run every time the search state changes
+  // }, [search]);
+
 
   const getAllUsers = async () => {
     try {
@@ -29,6 +36,7 @@ const AllUser = () => {
         usersArray.push(userData);
       });
       setAllUser(usersArray.filter((item) => item.id !== userData.id)); // Set the fetched data into state
+      setSearchFilter(usersArray.filter((item) => item.id !== userData.id))
     } catch (error) {
       console.error("Error fetching user data:", error);
     }
@@ -59,11 +67,22 @@ const AllUser = () => {
         <View style={styles.textContainer}>
           <Text style={styles.nameText}>{item.name}</Text>
           <Text style={styles.nameText}>{item.emailId}</Text>
-
         </View>
       </TouchableOpacity>
     );
+  }
 
+  const handleSearch = (search) => {
+    const filter = search.trim() === '' ? allUser : allUser.filter(user => user.name.toLowerCase().includes(search.toLowerCase()));
+    console.log(filter);
+    setSearchFilter(filter)
+  }
+
+  const handleSearch2 = (search) => {
+    console.log(search);
+    if (search.trim() === '') {
+      setSearchFilter(allUser)
+    }
   }
 
   return (
@@ -72,17 +91,20 @@ const AllUser = () => {
       <View style={styles.searchWrapper}>
         <TextInput
           placeholder="Search by name..."
-          // onChangeText={setSearch}
-          // value={search}
+          value={search}
+          onChangeText={(text) => {
+            setSearch(text);
+            handleSearch2(text);
+          }}
           style={styles.searchInput}
           placeholderTextColor="#666"
         />
-        <TouchableOpacity onPress={() => Alert.alert("hi")} style={styles.searchIcon}>
+        <TouchableOpacity onPress={() => handleSearch(search)} style={styles.searchIcon}>
           <AntDesign name="search1" size={20} color="#666" />
         </TouchableOpacity>
       </View>
       <FlatList
-        data={allUser}
+        data={searchFilter}
         renderItem={renderItem}
         keyExtractor={(item, index) => index.toString()}
         showsVerticalScrollIndicator={false}
