@@ -86,6 +86,7 @@ android {
         versionName "1.0"
     }
     signingConfigs {
+
          release {
             if (project.hasProperty('MYAPP_UPLOAD_STORE_FILE')) {
                 storeFile file(MYAPP_UPLOAD_STORE_FILE)
@@ -94,6 +95,7 @@ android {
                 keyPassword MYAPP_UPLOAD_KEY_PASSWORD
             }
         }
+        
         debug {
             storeFile file('debug.keystore')
             storePassword 'android'
@@ -118,7 +120,7 @@ android {
 dependencies {
     // The version of react-native is set by the React Native Gradle Plugin
     implementation("com.facebook.react:react-android")
-    
+
   
 
     if (hermesEnabled.toBoolean()) {

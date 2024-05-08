@@ -6,6 +6,8 @@ buildscript {
         targetSdkVersion = 34
         ndkVersion = "26.1.10909125"
         kotlinVersion = "1.9.22"
+        googlePlayServicesAuthVersion = "16.0.1" // <--- use this version or newer
+
     }
     repositories {
         google()
@@ -16,6 +18,17 @@ buildscript {
         classpath("com.facebook.react:react-native-gradle-plugin")
         classpath("org.jetbrains.kotlin:kotlin-gradle-plugin")
         classpath 'com.google.gms:google-services:4.4.1'
+    }
+    allprojects {
+    repositories {
+        mavenLocal()
+        google() // <--- make sure this is included
+        jcenter()
+        maven {
+            // All of React Native (JS, Obj-C sources, Android binaries) is installed from npm
+            url "$rootDir/../node_modules/react-native/android"
+            }
+        }
     }
 }
 

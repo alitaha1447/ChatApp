@@ -5,9 +5,6 @@ import { COLORS } from '../../Component/Constant/Color';
 import firestore from '@react-native-firebase/firestore';
 import { useNavigation } from '@react-navigation/native';
 
-
-
-
 const Home = () => {
   const [allUser, setAllUser] = useState([]);
   const navigation = useNavigation();
@@ -52,7 +49,6 @@ const Home = () => {
         </View>
       </TouchableOpacity>
     );
-
   }
 
   return (
@@ -73,7 +69,6 @@ const Home = () => {
           color='white' />
       </TouchableOpacity>
     </View>
-
   );
 }
 

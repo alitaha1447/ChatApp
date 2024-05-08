@@ -1,17 +1,17 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, Text, StatusBar, StyleSheet, Dimensions, Image, TextInput, TouchableOpacity, ScrollView, Alert } from 'react-native';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import { COLORS } from '../../Component/Constant/Color';
 import { FONTS } from '../../Component/Constant/Font';
-import FontAwesome6 from 'react-native-vector-icons/FontAwesome6';
+import AntDesign from 'react-native-vector-icons/AntDesign';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import firestore from '@react-native-firebase/firestore';
 import { useNavigation } from '@react-navigation/native';
 import { setUser } from '../../Redux/reducer/user';
 import { useDispatch } from 'react-redux';
-
-
+import { GoogleSignin, statusCodes } from '@react-native-google-signin/google-signin';
+import auth from '@react-native-firebase/auth';
 
 
 
@@ -22,12 +22,53 @@ const Login = () => {
   const navigation = useNavigation();
   const dispatch = useDispatch();
 
-
   const [email, setEmail] = useState('');
-  const [pass, setPass] = useState('');
+  const [password, setPassword] = useState('');
+
+  useEffect(() => {
+    GoogleSignin.configure({
+      webClientId: '748553410694-m1ujaj8ndcp8i80pe9sqpndru3mpic8d.apps.googleusercontent.com'
+    })
+  }, []);
+
+  const googleSignIn = async () => {
+    try {
+      // Check if the user is already signed in to Google, if so, sign them out.
+      const isSignedIn = await GoogleSignin.isSignedIn();
+      console.log(isSignedIn)
+      if (isSignedIn) {
+        await GoogleSignin.signOut();
+      }
+
+      // Ensure that Google Play Services are available and updated.
+      await GoogleSignin.hasPlayServices({ showPlayServicesUpdateDialog: true });
+
+      // Sign in with the configuration that forces account selection
+      const { idToken, user } = await GoogleSignin.signIn({
+        prompt: 'select_account', // This forces the account selection every time
+      });
+
+      // After successful sign-in, get the Google credential with the idToken
+      const googleCredential = auth.GoogleAuthProvider.credential(idToken);
+
+      // Sign in to Firebase with the Google credential
+      const firebaseResult = await auth().signInWithCredential(googleCredential);
+
+      // Update the email state to the user's email from Google
+      setEmail(user.email);
+
+      return firebaseResult;
+    } catch (error) {
+      if (error.code === statusCodes.SIGN_IN_REQUIRED) {
+        // Handle SIGN_IN_REQUIRED error here
+        console.log('User has not signed in yet or the session has expired.');
+      } else {
+        console.log(error);
+      }
+    }
+  }
 
   const loginUser = async () => {
-
     try {
       const querySnapshot = await firestore()
         .collection('Users')
@@ -36,14 +77,11 @@ const Login = () => {
 
       querySnapshot.forEach(doc => {
         const userData = doc.data();
-        // console.log(userData)
-        if (userData.password === pass && userData.emailId === email) {
-          // console.log(`Logged in user: ${userData.name}`);
+        if (userData.password === password && userData.emailId === email) {
           Alert.alert('Login Successfully!!!')
           dispatch(setUser(userData));
-
         } else {
-          console.log('Invalid Credential!!!')
+          Alert.alert('Invalid Credential!!!')
         }
       });
     } catch (error) {
@@ -78,6 +116,7 @@ const Login = () => {
                 placeholderTextColor={COLORS.liteBlack}
                 value={email}
                 onChangeText={(value) => setEmail(value)} />
+
             </View>
             {/*  */}
             <View style={styles.inputContainer}>
@@ -89,13 +128,24 @@ const Login = () => {
                 placeholder="Enter Password"
                 placeholderTextColor={COLORS.liteBlack}
                 secureTextEntry={true} // Initially hide password
-                value={pass}
-                onChangeText={(value) => setPass(value)} />
+                value={password}
+                onChangeText={(value) => setPassword(value)} />
             </View>
             {/*  */}
             <TouchableOpacity style={styles.btn} onPress={loginUser}>
               <Text style={styles.btnText}>Login Now</Text>
             </TouchableOpacity>
+            {/* Google Login */}
+            <View style={{ flex: 1, flexDirection: 'row', justifyContent: 'center' }}>
+              <TouchableOpacity style={styles.btnGoogle} onPress={() => googleSignIn().then(res => console.log(res.user.email))}>
+                <AntDesign name='googleplus' style={styles.googleIcon} />
+                {/* <Text style={styles.googleText}>Sign in with Google</Text> */}
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.btnGoogle} onPress={() => Alert.alert('FaceBook Login')}>
+                <AntDesign name='facebook-square' color='blue' style={styles.facebookIcon} />
+                {/* <Text style={styles.googleText}>Sign in with Google</Text> */}
+              </TouchableOpacity>
+            </View>
             {/*  */}
             <View style={styles.footer}>
               <Text style={styles.smallTxt}>Already have an account?</Text>
@@ -167,21 +217,18 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     elevation: 2,
   },
-
   inputIconView: {
     width: 40,
     borderRadius: 30,
     height: '100%', // Cover the entire height of the input container
     justifyContent: 'center',
     alignItems: 'center',
-
     backgroundColor: COLORS.theme,
   },
   icon: {
     color: 'white',
     fontSize: 18,
     marginRight: 10,
-
   },
   input: {
     flex: 1,
@@ -203,6 +250,35 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontFamily: FONTS.Bold,
     fontSize: 18,
+  },
+  btnGoogle: {
+    flexDirection: 'row',
+    backgroundColor: '#fff',
+    borderRadius: 10,
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    alignItems: 'center',
+    marginTop: 20,
+    width: 'auto',
+    alignSelf: 'center',
+    elevation: 3, // Adding shadow for better visibility
+    borderWidth: 1,
+    borderColor: '#ccc',
+    marginHorizontal: 5,
+  },
+  // googleText: {
+  //   marginLeft: 10,
+  //   color: 'black',
+  //   fontFamily: FONTS.Bold,
+  //   fontSize: 16,
+  // },
+  googleIcon: {
+    color: 'red',
+    fontSize: 26,
+  },
+  facebookIcon: {
+    color: 'blue',
+    fontSize: 26,
   },
   footer: {
     flexDirection: 'row',

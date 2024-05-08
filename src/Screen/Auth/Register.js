@@ -8,10 +8,6 @@ import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityI
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import uuid from 'react-native-uuid';
 import firestore from '@react-native-firebase/firestore';
-
-
-
-
 import { useNavigation } from '@react-navigation/native';
 
 const { width, height } = Dimensions.get('window');
@@ -22,48 +18,83 @@ const Register = () => {
 
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
-  const [pass, setPass] = useState('');
+  const [password, setPassword] = useState('');
 
+  const isName = (inputString) => {
+    return inputString.match(/[a-zA-Z]/g)
+  }
+
+  const isEmail = (inputString) => {
+    return inputString.match(/^\w+@[a-zA-Z_]+?\.[a-zA-Z]{2,3}$/g);
+  };
+
+  const isPassword = (inputString) => {
+    return /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,10}$/.test(inputString);
+  }
+
+  const validateFields = () => {
+    if (!name.trim() || !email.trim() || !password.trim()) {
+      Alert.alert('All fields are required!');
+      return false;
+    }
+
+    if (!isEmail(email)) {
+      Alert.alert('Invalid format');
+      return false;
+    }
+    if (!isName(name)) {
+      Alert.alert('No numeric value only alpha');
+      return false;
+    }
+    if (!isPassword(password)) {
+      Alert.alert('Invalid password');
+      return false;
+    }
+
+    return true;
+  };
 
   const registerUser = async () => {
-    if (name === '' || email === '' || pass === '') {
-      Alert.alert('All fields required');
-      return false;
-    } else {
+
+    const emailExists = async () => {
+      const querySnapshot = await firestore().collection('Users').where('emailId', '==', email).get();
+
+      return !querySnapshot.empty; // It will return false if no emailId exists else true if exists
+    }
+
+    if (validateFields()) {
       try {
-        let data = {
-          id: uuid.v4(),
-          name: name,
-          emailId: email,
-          password: pass,
-          img: "https://images.unsplash.com/photo-1575936123452-b67c3203c357?q=80&w=1000&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8aW1hZ2V8ZW58MHx8MHx8fDA%3D"
-        };
+        if (emailExists()) {
+          Alert.alert('Email already in use. Please use a different email.');
+          return;
+        }
+        else {
+          let data = {
+            id: uuid.v4(),
+            name: name.trim(),
+            emailId: email.trim(),
+            password: password,
+            img: "https://images.unsplash.com/photo-1575936123452-b67c3203c357?q=80&w=1000&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8aW1hZ2V8ZW58MHx8MHx8fDA%3D"
+          };
 
-        // console.log('Entering inside firestore database');
+          await firestore()
+            .collection('Users')
+            .add(data);
 
-        await firestore()
-          .collection('Users')
-          .add(data);
+          Alert.alert('Registration Successfully Done!!!');
+          navigation.navigate('Login');
+          // Clear the fields after registration
+          setName('');
+          setEmail('');
+          setPassword('');
+        }
 
-        // console.log("inside firestore database");
-
-
-
-        // console.log('Exit outside firestore database');
-
-        Alert.alert('Register Successfully Done!!!');
-
-        setName('');
-        setEmail('');
-        setPass('');
-        navigation.navigate('Login');
       } catch (error) {
         console.error('Error registering user: ', error);
         Alert.alert('Failed to register');
       }
     }
-  }
-
+  };
 
   return (
     <View style={{ flex: 1, backgroundColor: COLORS.lightgray }}>
@@ -115,8 +146,8 @@ const Register = () => {
                 placeholder="Enter Password"
                 placeholderTextColor={COLORS.liteBlack}
                 secureTextEntry={true} // Initially hide password
-                value={pass}
-                onChangeText={(value) => setPass(value)} />
+                value={password}
+                onChangeText={(value) => setPassword(value)} />
             </View>
             {/*  */}
             <TouchableOpacity style={styles.btn} onPress={registerUser}>

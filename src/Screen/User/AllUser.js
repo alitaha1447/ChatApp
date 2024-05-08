@@ -10,7 +10,6 @@ import { useNavigation } from '@react-navigation/native';
 const AllUser = () => {
 
   const { userData } = useSelector(state => state.User);
-  // console.log(userData)
 
   const [allUser, setAllUser] = useState();
   const [search, setSearch] = useState('');
@@ -21,11 +20,6 @@ const AllUser = () => {
   useEffect(() => {
     getAllUsers();
   }, []);
-
-  // useEffect(() => {
-  //   handleSearch(); // This will run every time the search state changes
-  // }, [search]);
-
 
   const getAllUsers = async () => {
     try {
@@ -43,16 +37,6 @@ const AllUser = () => {
   }
 
   const createChatList = (data) => {
-    // console.log('ChatList');
-    // console.log(data);
-    let roomId = uuid.v4();
-    let myData = {
-      name: userData.name,
-      emailId: userData.emailId,
-      img: userData.img,
-      lastMsg: '',
-      roomId,
-    }
     navigation.navigate('SingleChat', { selectedUserData: data }); // navigate to SingleChatScreen and transfer data as a props
     // navigation.navigate('ChatScreen', { selectedUserData: data }); // navigate to SingleChatScreen and transfer data as a props
   }
@@ -72,14 +56,13 @@ const AllUser = () => {
     );
   }
 
-  const handleSearch = (search) => {
+  const buttonSearch = (search) => {
     const filter = search.trim() === '' ? allUser : allUser.filter(user => user.name.toLowerCase().includes(search.toLowerCase()));
     console.log(filter);
     setSearchFilter(filter)
   }
 
-  const handleSearch2 = (search) => {
-    console.log(search);
+  const textSearch = (search) => {
     if (search.trim() === '') {
       setSearchFilter(allUser)
     }
@@ -94,12 +77,12 @@ const AllUser = () => {
           value={search}
           onChangeText={(text) => {
             setSearch(text);
-            handleSearch2(text);
+            textSearch(text);
           }}
           style={styles.searchInput}
           placeholderTextColor="#666"
         />
-        <TouchableOpacity onPress={() => handleSearch(search)} style={styles.searchIcon}>
+        <TouchableOpacity onPress={() => buttonSearch(search)} style={styles.searchIcon}>
           <AntDesign name="search1" size={20} color="#666" />
         </TouchableOpacity>
       </View>

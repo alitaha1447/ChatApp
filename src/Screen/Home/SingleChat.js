@@ -1,12 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ImageBackground, FlatList, TextInput, TouchableOpacity, Alert } from 'react-native';
+import { View, Text, StyleSheet, ImageBackground, FlatList, TextInput, TouchableOpacity } from 'react-native';
 import { useRoute } from '@react-navigation/native';
 import { COLORS } from '../../Component/Constant/Color';
 import Entypo from 'react-native-vector-icons/Entypo';
-import ChatHeader from '../../Component/Header/ChatHeader';
 import firestore from '@react-native-firebase/firestore';
 import { useSelector } from 'react-redux';
-import uuid from 'react-native-uuid';
 import { useNavigation } from '@react-navigation/native';
 
 const SingleChat = () => {
@@ -14,22 +12,17 @@ const SingleChat = () => {
   const [messages, setMessages] = useState([]);
 
   const navigation = useNavigation();
-
   const route = useRoute();
   const selectedUserData = route.params.selectedUserData;
   const { userData } = useSelector(state => state.User);
 
   // Dynamically generate roomId based on user IDs
   const generateRoomId = (userId1, userId2) => {
-    // console.log(userId1)
-    // console.log(userId2)
     const sortedIds = [userId1, userId2].sort();
-    // console.log(sortedIds)
     return sortedIds.join('');
   };
 
   const roomId = generateRoomId(userData.id, selectedUserData.id);
-  // console.log(roomId)
 
   useEffect(() => {
     const unsubscribe = firestore()
@@ -38,11 +31,7 @@ const SingleChat = () => {
       .collection('messages')
       .orderBy('createdAt', 'desc')
       .onSnapshot(snapshot => {
-        console.log('SingleChat')
-        console.log(snapshot.docs)
         const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        console.log('---------------')
-        console.log(data);
         // data.map(item => console.log(item.message))
         setMessages(data);
       });
@@ -56,7 +45,6 @@ const SingleChat = () => {
       message: msg,
       createdAt: new Date().toISOString(),
     };
-
     try {
       await firestore()
         .collection('ChatList')
@@ -102,9 +90,9 @@ const SingleChat = () => {
           inverted
         />
       </ImageBackground>
-      <View style={{ backgroundColor: COLORS.theme, elevation: 5, flexDirection: 'row', alignItems: 'center', paddingVertical: 7, justifyContent: 'space-evenly' }}>
+      <View style={styles.msgTextBox}>
         <TextInput
-          style={{ backgroundColor: COLORS.white, width: '80%', borderRadius: 25, borderWidth: 0.5, borderColor: COLORS.white, paddingHorizontal: 15, color: COLORS.black }}
+          style={styles.msgText}
           placeholder="Type a message"
           placeholderTextColor={COLORS.black}
           multiline={true}
@@ -125,4 +113,21 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
+  msgTextBox: {
+    backgroundColor: COLORS.theme,
+    elevation: 5,
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 7,
+    justifyContent: 'space-evenly',
+  },
+  msgText: {
+    backgroundColor: COLORS.white,
+    width: '80%',
+    borderRadius: 25,
+    borderWidth: 0.5,
+    borderColor: COLORS.white,
+    paddingHorizontal: 15,
+    color: COLORS.black,
+  }
 });
