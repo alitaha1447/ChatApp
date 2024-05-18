@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, Text, StatusBar, StyleSheet, Dimensions, Image, TextInput, TouchableOpacity, ScrollView, Alert } from 'react-native';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import { COLORS } from '../../Component/Constant/Color';
@@ -8,7 +8,11 @@ import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityI
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import uuid from 'react-native-uuid';
 import firestore from '@react-native-firebase/firestore';
+import { utils } from '@react-native-firebase/app';
+import storage from '@react-native-firebase/storage';
 import { useNavigation } from '@react-navigation/native';
+import { launchImageLibrary } from 'react-native-image-picker';
+
 
 const { width, height } = Dimensions.get('window');
 
@@ -19,6 +23,10 @@ const Register = () => {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [imageUri, setImageUri] = useState(null);
+  const [imgName, setImgName] = useState('');
+
+
 
   const isName = (inputString) => {
     return inputString.match(/[a-zA-Z]/g)
@@ -38,14 +46,16 @@ const Register = () => {
       return false;
     }
 
-    if (!isEmail(email)) {
-      Alert.alert('Invalid format');
-      return false;
-    }
     if (!isName(name)) {
       Alert.alert('No numeric value only alpha');
       return false;
     }
+
+    if (!isEmail(email)) {
+      Alert.alert('Invalid emailId format');
+      return false;
+    }
+
     if (!isPassword(password)) {
       Alert.alert('Invalid password');
       return false;
@@ -56,25 +66,28 @@ const Register = () => {
 
   const registerUser = async () => {
 
-    const emailExists = async () => {
-      const querySnapshot = await firestore().collection('Users').where('emailId', '==', email).get();
+    // const emailExists = async () => {
+    //   const querySnapshot = await firestore().collection('Users').where('emailId', '==', email).get();
 
-      return !querySnapshot.empty; // It will return false if no emailId exists else true if exists
-    }
+    //   return !querySnapshot.empty; // It will return false if no emailId exists else true if exists
+    // }
+
+    const imageUrl = await uploadImageToStorage(imgName, imageUri); // Upload image and get URL
 
     if (validateFields()) {
       try {
-        if (emailExists()) {
-          Alert.alert('Email already in use. Please use a different email.');
-          return;
-        }
-        else {
+        // if (emailExists()) {
+        //   Alert.alert('Email already in use. Please use a different email.');
+        //   return;
+        // }
+
+        {
           let data = {
             id: uuid.v4(),
             name: name.trim(),
             emailId: email.trim(),
             password: password,
-            img: "https://images.unsplash.com/photo-1575936123452-b67c3203c357?q=80&w=1000&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8aW1hZ2V8ZW58MHx8MHx8fDA%3D"
+            img: imageUrl // Store the URL obtained from storage
           };
 
           await firestore()
@@ -88,7 +101,6 @@ const Register = () => {
           setEmail('');
           setPassword('');
         }
-
       } catch (error) {
         console.error('Error registering user: ', error);
         Alert.alert('Failed to register');
@@ -96,12 +108,49 @@ const Register = () => {
     }
   };
 
+  const uploadImageToStorage = async (fileName, uri) => {
+
+    try {
+      const reference = storage().ref(fileName);
+      // const pathToFile = `${utils.FilePath.PROFILE_PIC}/${uri}`;
+      await reference.putFile(uri); // Use the uri directly
+      const url = await reference.getDownloadURL();
+      console.log('Uploaded Image URL:', url);
+      return url;
+    } catch (error) {
+      console.error('Upload error:', error);
+      Alert.alert('Upload failed:', error.message);
+    }
+  }
+
+  const selectImage = async () => {
+    const result = await launchImageLibrary({
+      mediaType: 'photo',
+      quality: 0.5
+    });
+    if (!result.didCancel && result.assets && result.assets[0].uri) {
+      const uri = result.assets[0].uri;
+      setImageUri(uri); // Set image to state to display in the UI
+      const fileName = result.assets[0].fileName;
+      setImgName(fileName);
+    } else {
+      setImageUri(null); // Ensure it resets to null if the selection is canceled or fails
+    }
+  }
+
   return (
+
     <View style={{ flex: 1, backgroundColor: COLORS.lightgray }}>
       <StatusBar backgroundColor={COLORS.theme} barStyle="light-content" hidden={false} />
       <View style={styles.uppercard}>
-        <Image style={styles.logo} source={require('../../Assets/images/developerSin.jpg')} />
-        <Text style={styles.title}>DEVELOPERS' SIN</Text>
+        <TouchableOpacity onPress={selectImage}>
+          <View style={styles.container}>
+            <Image
+              source={{ uri: imageUri }}
+              style={styles.image}
+            />
+          </View>
+        </TouchableOpacity>
       </View>
       <View style={styles.content}>
         <KeyboardAwareScrollView
@@ -188,6 +237,20 @@ const styles = StyleSheet.create({
     fontFamily: FONTS.Bold,
     fontSize: 25,
     marginTop: 10,
+  },
+  container: {
+    width: 150,
+    height: 150,
+    borderRadius: 100,
+    backgroundColor: '#ccc',
+    justifyContent: 'center',
+    alignItems: 'center',
+    overflow: 'hidden',
+  },
+  image: {
+    width: '100%',
+    height: '100%',
+    resizeMode: 'cover'
   },
   content: {
     flex: 1,

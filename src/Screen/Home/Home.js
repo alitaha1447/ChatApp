@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet, StatusBar, TouchableOpacity, Alert, FlatList, Image } from 'react-native'
+import { View, Text, StyleSheet, StatusBar, TouchableOpacity, Alert, FlatList, Image, ActivityIndicator } from 'react-native';
 import React, { useEffect, useState } from 'react';
 import Feather from 'react-native-vector-icons/Feather';
 import { COLORS } from '../../Component/Constant/Color';
@@ -10,30 +10,24 @@ const Home = () => {
   const navigation = useNavigation();
 
   useEffect(() => {
-    getAllUsers();
-  }, [])
-
-
-  const getAllUsers = async () => {
-    try {
-      const querySnapshot = await firestore().collection('Users').get();
-      const usersArray = [];
-      querySnapshot.forEach(doc => {
-        const userData = doc.data();
-        usersArray.push(userData);
-      });
-      setAllUser(usersArray); // Set the fetched data into state
-    } catch (error) {
-      console.error("Error fetching user data:", error);
-    }
-  }
-
-  useEffect(() => {
-    // console.log(allUser);
-  }, [allUser]);
-
+    const fetchUsers = async () => {
+      try {
+        const querySnapshot = await firestore().collection('Users').get();
+        const usersArray = [];
+        querySnapshot.forEach(doc => {
+          const userData = doc.data();
+          usersArray.push(userData);
+        });
+        setAllUser(usersArray);
+      } catch (error) {
+        console.error("Error fetching user data:", error);
+      }
+    };
+    fetchUsers();
+  }, []);
 
   const renderItem = ({ item }) => {
+    console.log(item)
     return (
       <TouchableOpacity
         style={styles.itemContainer}
@@ -49,7 +43,7 @@ const Home = () => {
         </View>
       </TouchableOpacity>
     );
-  }
+  };
 
   return (
     <View style={styles.container}>
@@ -64,15 +58,14 @@ const Home = () => {
         style={styles.button}
         onPress={() => navigation.navigate('AllUser')}
         activeOpacity={0.8}>
-        <Feather name='user'
-          size={24}
-          color='white' />
+        <Feather name='user' size={24} color='white' />
       </TouchableOpacity>
-    </View>
+    </View >
   );
-}
+};
 
 export default Home;
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Alert, TouchableOpacity, View, Text } from 'react-native';
+import { Alert, TouchableOpacity, View, Text, Image, StyleSheet } from 'react-native';
 import { createStackNavigator } from '@react-navigation/stack';
 import AntDesign from 'react-native-vector-icons/AntDesign';
 import { useDispatch, useSelector } from 'react-redux';
@@ -12,7 +12,7 @@ import SingleChat from '../Screen/Home/SingleChat';
 
 const Stack = createStackNavigator();
 
-const AppStack = ({ sele }) => {
+const AppStack = () => {
   const dispatch = useDispatch();
   const { userData } = useSelector(state => state.User); // Destructuring
   // const  userData  = useSelector(state => state.User.userData)
@@ -24,6 +24,7 @@ const AppStack = ({ sele }) => {
   const HeaderTitle = () => {
     return (
       <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+        <Image source={{ uri: userData.img }} style={styles.avatar} />
         <Text style={{ fontSize: 18, marginRight: 10, color: COLORS.theme, fontWeight: '900' }}>{userData.name}</Text>
       </View>
     )
@@ -52,4 +53,12 @@ const AppStack = ({ sele }) => {
   )
 }
 
-export default AppStack
+export default AppStack;
+const styles = StyleSheet.create({
+  avatar: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    marginRight: 10,
+  },
+});

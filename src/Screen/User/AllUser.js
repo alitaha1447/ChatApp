@@ -15,6 +15,7 @@ const AllUser = () => {
   const [search, setSearch] = useState('');
   const [searchFilter, setSearchFilter] = useState('')
 
+
   const navigation = useNavigation();
 
   useEffect(() => {
@@ -45,9 +46,10 @@ const AllUser = () => {
     return (
       <TouchableOpacity onPress={() => createChatList(item)} style={styles.itemContainer} activeOpacity={0.7}>
         <Image
-          source={{ uri: item.img }}
+          source={{ uri: item?.img }}
           style={styles.avatar}
         />
+
         <View style={styles.textContainer}>
           <Text style={styles.nameText}>{item.name}</Text>
           <Text style={styles.nameText}>{item.emailId}</Text>

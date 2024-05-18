@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ImageBackground, FlatList, TextInput, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, ImageBackground, FlatList, TextInput, TouchableOpacity, Image } from 'react-native';
 import { useRoute } from '@react-navigation/native';
 import { COLORS } from '../../Component/Constant/Color';
 import Entypo from 'react-native-vector-icons/Entypo';
@@ -10,6 +10,8 @@ import { useNavigation } from '@react-navigation/native';
 const SingleChat = () => {
   const [msg, setMsg] = useState('');
   const [messages, setMessages] = useState([]);
+
+
 
   const navigation = useNavigation();
   const route = useRoute();
@@ -71,7 +73,15 @@ const SingleChat = () => {
 
   useEffect(() => {
     navigation.setOptions({
-      headerTitle: selectedUserData.name // Set header title dynamically
+      headerTitle: () => (
+        <View style={styles.headerContainer} >
+          <Image
+            source={{ uri: selectedUserData?.img }}
+            style={styles.headerImage}
+          />
+          <Text style={styles.headerText}>{selectedUserData.name}</Text>
+        </View >
+      ),
     });
   }, [selectedUserData]);
 
@@ -129,5 +139,21 @@ const styles = StyleSheet.create({
     borderColor: COLORS.white,
     paddingHorizontal: 15,
     color: COLORS.black,
-  }
+  },
+  headerContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+
+  },
+  headerImage: {
+    width: 50,
+    height: 50,
+    borderRadius: 50,
+    marginRight: 10,
+  },
+  headerText: {
+    fontSize: 20,
+    color: 'black',
+    fontWeight: 'bold'
+  },
 });
